@@ -15,7 +15,12 @@ Admin usage
 -----------
 1. To install the plugin, place pFlagPlugin.dll and Newtonsoft.Json.dll into %ServerRoot%/plugins/.
 2. Place the pFlags folder in /addon/ in your %ServerRoot%/addon folder.
-3. Use the !coords command to find your current coordinates, and add them to <mapname>.json inside the pFlags folder. **Note: the files should be valid json. use [this](http://jsonlint.com/) to validate.**
+3. Use the !coords command to find your current coordinates, and add them to <mapname>.json inside the pFlags folder. **Note: the files should be valid json. Use [this](http://jsonlint.com/) to validate.**
+
+- auto_use_in: true/false sets whether or not the in-flag should automatically TP the player.
+- hide_out: true/false sets whether or not the out-flag should be hidden.
+- bothways: true/false sets whether or not the flags work both ways. Using this with auto_use_in enabled will give you stupid results.
+- model_in & model_out: sets which model for the flag should be used. Keep in mind every map has specific flag models loaded. "prop_flag_neutral" will always work. (Map specific: prop_flag_sas, prop_flag_speznas, prop_flag_delta) 
 
 Player usage
 -----------

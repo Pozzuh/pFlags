@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using Addon;
-
+//this shit is a mess, I know
 namespace pFlagPlugin
 {
     class Flag
     {
-        private bool _bothWays = false;
         private Vector _fIn;
         private Vector _fOut;
-        private Entity _entityIn;
-        private Entity _entityOut;
 
         public Flag(Vector v1, Vector v2)
         {
@@ -38,5 +35,10 @@ namespace pFlagPlugin
         {
             get { return _fOut; }
         }
+
+        public string modelIn { get; set; }
+        public string modelOut { get; set; }
+        public bool hideOut { get; set; }
+        public bool autoUseIn { get; set; }
     }
 }

@@ -12,7 +12,11 @@
 			"y": -204,
 			"z": -390
 		},
-		"bothways": false
+		"auto_use_in": true,
+		"hide_out": true,
+		"bothways": false,
+		"model_in": "prop_flag_speznas",
+		"model_out": "prop_flag_delta"
 	},
 	{
 		"position_in":
@@ -27,6 +31,10 @@
 			"y": 206,
 			"z": -416
 		},
-		"bothways": true
+		"auto_use_in": false,
+		"hide_out": false,
+		"bothways": true,
+		"model_in": "prop_flag_neutral",
+		"model_out": "prop_flag_neutral"
 	}
 ]

@@ -12,7 +12,11 @@
 			"y": 5801,
 			"z": 192
 		},
-		"bothways": false
+		"auto_use_in": false,
+		"hide_out": false,
+		"bothways": false,
+		"model_in": "prop_flag_neutral",
+		"model_out": "prop_flag_neutral"
 	},
 	{
 		"position_in":
@@ -27,6 +31,10 @@
 			"y": 3439,
 			"z": 40
 		},
-		"bothways": true
+		"auto_use_in": false,
+		"hide_out": false,
+		"bothways": true,
+		"model_in": "prop_flag_neutral",
+		"model_out": "prop_flag_neutral"
 	}
 ]

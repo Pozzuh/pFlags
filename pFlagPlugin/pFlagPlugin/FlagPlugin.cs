@@ -12,10 +12,14 @@ namespace pFlagPlugin
     {
         bool flagsEnabled = false;
         List<Flag> flags = new List<Flag>();
+        /*int fx_flagbase_black;
+        int fx_flagbase_gold;
+        int fx_flagbase_red;
+        int fx_flagbase_silver;*/
 
         public override void OnServerLoad()
         {
-            ServerPrint("pFlags loaded. Author: Pozzuh. Version 1.0");
+            ServerPrint("pFlags loaded. Author: Pozzuh. Version 1.1");
         }
 
         public override void OnMapChange()
@@ -35,6 +39,14 @@ namespace pFlagPlugin
             flagsEnabled = false;
             flags.Clear();
         }
+
+        /*public override void OnPrecache()
+        {
+            fx_flagbase_black = Addon.Extensions.LoadFX(@"misc/ui_flagbase_black");
+            fx_flagbase_gold = Addon.Extensions.LoadFX(@"misc/ui_flagbase_gold");
+            fx_flagbase_red = Addon.Extensions.LoadFX(@"misc/ui_flagbase_red");
+            fx_flagbase_silver = Addon.Extensions.LoadFX(@"misc/ui_flagbase_silver");
+        }*/
 
         void setupFlagData()
         {
@@ -65,21 +77,37 @@ namespace pFlagPlugin
             JArray jsonData = JArray.Parse(sData);
 
             foreach (var item in jsonData.Children())
-            {     
-                int x1 = (int)item.SelectToken("position_in.x");
-                int y1 = (int)item.SelectToken("position_in.y");
-                int z1 = (int)item.SelectToken("position_in.z");
+            {
+                try
+                {
+                    int x1 = (int)item.SelectToken("position_in.x");
+                    int y1 = (int)item.SelectToken("position_in.y");
+                    int z1 = (int)item.SelectToken("position_in.z");
 
-                int x2 = (int)item.SelectToken("position_out.x");
-                int y2 = (int)item.SelectToken("position_out.y");
-                int z2 = (int)item.SelectToken("position_out.z");
+                    int x2 = (int)item.SelectToken("position_out.x");
+                    int y2 = (int)item.SelectToken("position_out.y");
+                    int z2 = (int)item.SelectToken("position_out.z");
 
-                bool bothWays = (bool)item.SelectToken("bothways");
-                Flag f = new Flag(x1, y1, z1, x2, y2, z2);
-                f.bothWays = bothWays;
+                    bool bothWays = (bool)item.SelectToken("bothways");
+                    bool hideOut = (bool)item.SelectToken("hide_out");
+                    bool autoUseIn = (bool)item.SelectToken("auto_use_in");
 
-                flags.Add(f);
-                flagsEnabled = true;
+                    string modelIn = (string)item.SelectToken("model_in");
+                    string modelOut = (string)item.SelectToken("model_out");
+                    Flag f = new Flag(x1, y1, z1, x2, y2, z2);
+                    f.modelIn = modelIn;
+                    f.modelOut = modelOut;
+                    f.bothWays = bothWays;
+                    f.hideOut = hideOut;
+                    f.autoUseIn = autoUseIn;
+
+                    flags.Add(f);
+                    flagsEnabled = true;
+                }
+                catch (Exception e)
+                {
+                    ServerPrint("pFlags: something went wrong, not all flags were correctly loaded.");
+                }
             }           
         }
 
@@ -90,8 +118,12 @@ namespace pFlagPlugin
 
             for(int i = 0; i < flags.Count; i++)
             {
-                Entity eIn = SpawnModel("script_brushmodel", "prop_flag_neutral", flags[i].positionIn);
-                Entity eOut = SpawnModel("script_brushmodel", "prop_flag_neutral", flags[i].positionOut);
+                //prop_flag_delta, prop_flag_speznas, prop_flag_neutral
+                Entity eIn = SpawnModel("script_brushmodel", flags[i].modelIn, flags[i].positionIn);
+                Entity eOut = SpawnModel("script_brushmodel", flags[i].modelOut, flags[i].positionOut);
+
+                if (flags[i].hideOut)
+                    Addon.Extensions.Hide(eOut);
 
                 Random random = new Random(); //WOW MAKES IT FEEL SO ALIVE
                 Addon.Extensions.SetAngles(eIn, new Vector(0, random.Next(360), 0));
@@ -114,15 +146,17 @@ namespace pFlagPlugin
                         {
                             if (Util.Distance(Util.clientToVector(Client), f.positionIn) <= 100f)
                             {
-                                iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
-                                if (Client.Other.ButtonPressed(Buttons.Activate))
+                                if (Client.Other.ButtonPressed(Buttons.Activate) || f.autoUseIn)
                                     Util.moveTo(Client, f.positionOut);
+                                else
+                                    iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
                             }
                             else if (Util.Distance(Util.clientToVector(Client), f.positionOut) <= 100f && f.bothWays)
                             {
-                                iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
                                 if (Client.Other.ButtonPressed(Buttons.Activate))
                                     Util.moveTo(Client, f.positionIn);
+                                else
+                                    iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
                             }
                         }
                     }

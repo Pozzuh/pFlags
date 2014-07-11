@@ -1,0 +1,21 @@
+[
+	{
+		"position_in":
+		{
+			"x": 930,
+			"y": -1945,
+			"z": 608
+		},
+		"position_out":
+		{
+			"x": 82,
+			"y": -1912,
+			"z": 608
+		},
+		"auto_use_in": true,
+		"hide_out": false,
+		"bothways": false,
+		"model_in": "prop_flag_neutral",
+		"model_out": "prop_flag_neutral"
+	}
+]
