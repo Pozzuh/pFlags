@@ -13,9 +13,9 @@ Requirements
 
 Admin usage
 -----------
-1. To install the plugin, place pFlagPlugin.dll and Newtonsoft.Json.dll into %ServerRoot%/plugins/. **Note: do not rename the .dll file, this will cause issues.** 
+1. To install the plugin, place pFlagPlugin.dll and Newtonsoft.Json.dll into %ServerRoot%/plugins/.
 2. Place the pFlags folder in /addon/ in your %ServerRoot%/addon folder.
-3. Use the !coords command to find your current coordinates, and add them to <mapname>.json inside the pFlags folder. **Note: the files should be valid json. use [this](http://jsonlint.com/) to validate.
+3. Use the !coords command to find your current coordinates, and add them to <mapname>.json inside the pFlags folder. **Note: the files should be valid json. use [this](http://jsonlint.com/) to validate.**
 
 Player usage
 -----------
