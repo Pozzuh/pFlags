@@ -1,0 +1,32 @@
+[
+	{
+		"position_in":
+		{
+			"x": 915,
+			"y": 7321,
+			"z": 192
+		},
+		"position_out":
+		{
+			"x": 953,
+			"y": 5801,
+			"z": 192
+		},
+		"bothways": false
+	},
+	{
+		"position_in":
+		{
+			"x": 1471,
+			"y": 4205,
+			"z": 368
+		},
+		"position_out":
+		{
+			"x": 983,
+			"y": 3439,
+			"z": 40
+		},
+		"bothways": true
+	}
+]
