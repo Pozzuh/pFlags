@@ -201,12 +201,6 @@ namespace pFlagPlugin
         {
             string lowMsg = Message.ToLower();
 
-            if (lowMsg.StartsWith("tp"))
-            {
-                iPrintLnBold(PluginClients[Client.ClientNum].msgGrace.ToString(), Client);
-                return ChatType.ChatNone;
-            }
-
             if (lowMsg.StartsWith("!coords"))
             {
                 StringBuilder s = new StringBuilder();
