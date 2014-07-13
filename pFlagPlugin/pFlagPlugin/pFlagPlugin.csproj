@@ -63,6 +63,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Flag.cs" />
     <Compile Include="FlagPlugin.cs" />
+    <Compile Include="PluginClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>

@@ -10,6 +10,8 @@ namespace pFlagPlugin
 {
     public class FlagPlugin : CPlugin
     {
+        public const int FLAG_MSG_GRACE = 12; // 12/4=3 seconds
+        PluginClient[] PluginClients = new PluginClient[18];
         bool flagsEnabled = false;
         List<Flag> flags = new List<Flag>();
         /*int fx_flagbase_black;
@@ -19,7 +21,7 @@ namespace pFlagPlugin
 
         public override void OnServerLoad()
         {
-            ServerPrint("pFlags loaded. Author: Pozzuh. Version 1.1");
+            ServerPrint("pFlags loaded. Author: Pozzuh. Version 1.2");
         }
 
         public override void OnMapChange()
@@ -38,6 +40,16 @@ namespace pFlagPlugin
         {
             flagsEnabled = false;
             flags.Clear();
+        }
+
+        public override void OnPlayerConnect(ServerClient Client)
+        {
+            PluginClients[Client.ClientNum] = new PluginClient(Client.ClientNum);
+        }
+
+        public override void OnPlayerDisconnect(ServerClient Client)
+        {
+            PluginClients[Client.ClientNum] = null;
         }
 
         /*public override void OnPrecache()
@@ -104,7 +116,7 @@ namespace pFlagPlugin
                     flags.Add(f);
                     flagsEnabled = true;
                 }
-                catch (Exception e)
+                catch
                 {
                     ServerPrint("pFlags: something went wrong, not all flags were correctly loaded.");
                 }
@@ -142,21 +154,40 @@ namespace pFlagPlugin
                 {
                     foreach (ServerClient Client in GetClients())
                     {
+                        if (Client == null)
+                            continue;
+
+                        if (Client.ConnectionState != ConnectionStates.Connected)
+                            continue;
+
+                        if (PluginClients[Client.ClientNum].msgGrace > 0)
+                            PluginClients[Client.ClientNum].msgGrace--;
+
                         foreach (Flag f in flags)
                         {
+                            
                             if (Util.Distance(Util.clientToVector(Client), f.positionIn) <= 100f)
                             {
-                                if (Client.Other.ButtonPressed(Buttons.Activate) || f.autoUseIn)
-                                    Util.moveTo(Client, f.positionOut);
-                                else
+                                if (PluginClients[Client.ClientNum].msgGrace <= 0 && !f.autoUseIn)
+                                {
+                                    PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
                                     iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
+                                }
+
+                                if ((Client.Other.ButtonPressed(Buttons.Activate) || f.autoUseIn))
+                                    Util.moveTo(Client, f.positionOut);        
+
                             }
                             else if (Util.Distance(Util.clientToVector(Client), f.positionOut) <= 100f && f.bothWays)
                             {
+                                if (PluginClients[Client.ClientNum].msgGrace <= 0)
+                                {
+                                    PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
+                                    iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
+                                }
+
                                 if (Client.Other.ButtonPressed(Buttons.Activate))
                                     Util.moveTo(Client, f.positionIn);
-                                else
-                                    iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
                             }
                         }
                     }
@@ -169,6 +200,12 @@ namespace pFlagPlugin
         public override ChatType OnSay(string Message, ServerClient Client, bool teamChat)
         {
             string lowMsg = Message.ToLower();
+
+            if (lowMsg.StartsWith("tp"))
+            {
+                iPrintLnBold(PluginClients[Client.ClientNum].msgGrace.ToString(), Client);
+                return ChatType.ChatNone;
+            }
 
             if (lowMsg.StartsWith("!coords"))
             {
