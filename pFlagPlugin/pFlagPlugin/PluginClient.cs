@@ -9,6 +9,7 @@ namespace pFlagPlugin
     {
         private int _clientNum = -1;
         public int msgGrace = 0;
+        public int timesTeleported = 0;
         //public int tpCooldown = 0;
 
         public PluginClient(int clientNum)

@@ -11,6 +11,9 @@ namespace pFlagPlugin
     public class FlagPlugin : CPlugin
     {
         public const int FLAG_MSG_GRACE = 12; // 12/4=3 seconds
+        public bool TP_LIMIT_ENABLED = false;
+        public int MAX_TELEPORTS = 0;
+        public int TP_LIMIT_TEAM = 0; //0=neither,1=allies,2=axis,3=both
         PluginClient[] PluginClients = new PluginClient[18];
         bool flagsEnabled = false;
         List<Flag> flags = new List<Flag>();
@@ -21,7 +24,9 @@ namespace pFlagPlugin
 
         public override void OnServerLoad()
         {
-            ServerPrint("pFlags loaded. Author: Pozzuh. Version 1.2");
+            ServerPrint("pFlags loaded. Author: Pozzuh. Version 1.3");
+
+            setupTPLimit();
         }
 
         public override void OnMapChange()
@@ -59,6 +64,39 @@ namespace pFlagPlugin
             fx_flagbase_red = Addon.Extensions.LoadFX(@"misc/ui_flagbase_red");
             fx_flagbase_silver = Addon.Extensions.LoadFX(@"misc/ui_flagbase_silver");
         }*/
+
+        void setupTPLimit()
+        {
+            if (GetServerCFG("pFlags", "Max_Teleports", "-1") == "-1")
+                SetServerCFG("pFlags", "Max_Teleports", "0");
+
+            if(GetServerCFG("pFlags", "Limit_for_team", "-1") == "-1")
+                SetServerCFG("pFlags", "Limit_for_team", "both");
+
+
+            string maxTeleports = GetServerCFG("pFlags", "Max_Teleports", "0"); // <1 = unlimited
+            Int32.TryParse(maxTeleports, out MAX_TELEPORTS);
+
+            if (MAX_TELEPORTS >= 1)
+                TP_LIMIT_ENABLED = true;
+
+            string limitTPteam = GetServerCFG("pFlags", "Limit_for_team", "both");
+            switch (limitTPteam.ToLower() )
+            {
+                case "allies":
+                    TP_LIMIT_TEAM = 1;
+                    break;
+                case "axis":
+                    TP_LIMIT_TEAM = 2;
+                    break;
+                case "both":
+                    TP_LIMIT_TEAM = 3;
+                    break;
+                default:
+                    TP_LIMIT_TEAM = 3;
+                    break;
+            }
+        }
 
         void setupFlagData()
         {
@@ -146,6 +184,27 @@ namespace pFlagPlugin
             }
         }
 
+        bool teamHasLimit(Teams team)
+        {
+            if (!TP_LIMIT_ENABLED)
+                return false;
+            if (TP_LIMIT_TEAM == 3)
+                return true;
+
+            if (team == Teams.Allies)
+            {
+                if (TP_LIMIT_TEAM == 1)
+                    return true;
+            }
+            else if(team == Teams.Axis)
+            {
+                if(TP_LIMIT_TEAM == 2)
+                    return true;
+            }
+
+            return false;
+        }
+
         public override void OnAddonFrame()
         {
             if (flagsEnabled)
@@ -164,30 +223,79 @@ namespace pFlagPlugin
                             PluginClients[Client.ClientNum].msgGrace--;
 
                         foreach (Flag f in flags)
-                        {
-                            
+                        {                  
                             if (Util.Distance(Util.clientToVector(Client), f.positionIn) <= 100f)
                             {
                                 if (PluginClients[Client.ClientNum].msgGrace <= 0 && !f.autoUseIn)
                                 {
-                                    PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
-                                    iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
+                                    if(!TP_LIMIT_ENABLED 
+                                        || (TP_LIMIT_ENABLED && teamHasLimit(Client.Team) && PluginClients[Client.ClientNum].timesTeleported < MAX_TELEPORTS) 
+                                        || (TP_LIMIT_ENABLED && !teamHasLimit(Client.Team)))
+                                    {
+                                        PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
+                                        iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
+                                    }
                                 }
 
                                 if ((Client.Other.ButtonPressed(Buttons.Activate) || f.autoUseIn))
-                                    Util.moveTo(Client, f.positionOut);        
-
+                                {
+                                    if (!TP_LIMIT_ENABLED)
+                                    {
+                                        Util.moveTo(Client, f.positionOut);
+                                    }
+                                    else if (TP_LIMIT_ENABLED && (teamHasLimit(Client.Team) && PluginClients[Client.ClientNum].timesTeleported < MAX_TELEPORTS))
+                                    {
+                                        Util.moveTo(Client, f.positionOut);
+                                        PluginClients[Client.ClientNum].timesTeleported++;
+                                        iPrintLnBold(String.Format("You have {0} teleport(s) remaining this match.", MAX_TELEPORTS - PluginClients[Client.ClientNum].timesTeleported), Client);
+                                    }
+                                    else if(TP_LIMIT_ENABLED && !teamHasLimit(Client.Team))
+                                    {
+                                        Util.moveTo(Client, f.positionOut);
+                                    }
+                                    else if (PluginClients[Client.ClientNum].msgGrace <= 0)
+                                    {
+                                        PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
+                                        iPrintLnBold("You can't teleport anymore in this match.", Client);
+                                    }
+                                }
                             }
-                            else if (Util.Distance(Util.clientToVector(Client), f.positionOut) <= 100f && f.bothWays)
+                            else if (Util.Distance(Util.clientToVector(Client), f.positionOut) <= 100f && f.bothWays )
                             {
                                 if (PluginClients[Client.ClientNum].msgGrace <= 0)
                                 {
-                                    PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
-                                    iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
+                                    if (!TP_LIMIT_ENABLED
+                                        || (TP_LIMIT_ENABLED && teamHasLimit(Client.Team) && PluginClients[Client.ClientNum].timesTeleported < MAX_TELEPORTS)
+                                        || (TP_LIMIT_ENABLED && !teamHasLimit(Client.Team)))
+                                    {
+                                        PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
+                                        iPrintLnBold("Press ^3[{+activate}] ^7to teleport.", Client);
+                                    }
+                                    
                                 }
 
                                 if (Client.Other.ButtonPressed(Buttons.Activate))
-                                    Util.moveTo(Client, f.positionIn);
+                                {
+                                    if (!TP_LIMIT_ENABLED)
+                                    {
+                                        Util.moveTo(Client, f.positionIn);
+                                    }
+                                    else if (TP_LIMIT_ENABLED && (teamHasLimit(Client.Team) && PluginClients[Client.ClientNum].timesTeleported < MAX_TELEPORTS))
+                                    {
+                                        Util.moveTo(Client, f.positionIn);
+                                        PluginClients[Client.ClientNum].timesTeleported++;
+                                        iPrintLnBold(String.Format("You have {0} teleport(s) remaining this match.", MAX_TELEPORTS - PluginClients[Client.ClientNum].timesTeleported), Client);
+                                    }
+                                    else if (TP_LIMIT_ENABLED && !teamHasLimit(Client.Team))
+                                    {
+                                        Util.moveTo(Client, f.positionIn);
+                                    }
+                                    else if (PluginClients[Client.ClientNum].msgGrace <= 0)
+                                    {
+                                        PluginClients[Client.ClientNum].msgGrace = FLAG_MSG_GRACE;
+                                        iPrintLnBold("You can't teleport anymore in this match.", Client);
+                                    }
+                                }
                             }
                         }
                     }
